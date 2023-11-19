@@ -1,23 +1,5 @@
 from fastapi import FastAPI
-from pydantic import BaseModel, Field
-import datetime 
-
-class Booking(BaseModel):
-    booking_id: int
-    user_id: int
-    room_id: int
-    reserved_num: int
-    start_date_time: datetime.datetime
-    end_date_time: datetime.datetime
-
-class User(BaseModel):
-    user_id: int
-    username: str=Field(max_length=12)
-
-class Room(BaseModel):
-    room_id: int
-    room_name: str = Field(max_length=12)
-    capacity: int
+from .schemas import Booking, User, Room
 
 app = FastAPI()
 
