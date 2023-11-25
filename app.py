@@ -25,8 +25,6 @@ if page == 'users':
         )
         if res.status_code == 200:
             st.success("ユーザー登録完了")
-        st.json(res.json())
-
 elif page=='rooms':
     st.title("会議室登録画面")
 
@@ -48,8 +46,6 @@ elif page=='rooms':
         )
         if res.status_code == 200:
             st.success("会議室登録完了")
-        st.json(res.json())
-    
 elif page=='bookings':
     st.title("会議室予約画面")
 
@@ -82,6 +78,7 @@ elif page=='bookings':
     url_bookings = 'http://127.0.0.1:8000/bookings'
     res = requests.get(url_bookings)
     bookings = res.json()
+    df_bookings = pd.DataFrame(bookings)
 
     users_id = {}
     for user in users:
@@ -99,26 +96,25 @@ elif page=='bookings':
     to_room_name =  lambda x: rooms_id[x]['room_name']
     to_datetime = lambda x: datetime.datetime.fromisoformat(x).strftime('%Y/%m/%d %H:%M')
 
-
-    df_bookings = pd.DataFrame(bookings)
     # 特定の列に適応
-    df_bookings['user_id'] = df_bookings['user_id'].map(to_username)
-    df_bookings['room_id'] = df_bookings['room_id'].map(to_room_name)
-    df_bookings['start_datetime'] = df_bookings['start_datetime'].map(to_datetime)
-    df_bookings['end_datetime'] = df_bookings['end_datetime'].map(to_datetime)
+    if len(bookings) == 0:
+        st.error('まだ予約がありません。')
+    else:
+        df_bookings['user_id'] = df_bookings['user_id'].map(to_username)
+        df_bookings['room_id'] = df_bookings['room_id'].map(to_room_name)
+        df_bookings['start_datetime'] = df_bookings['start_datetime'].map(to_datetime)
+        df_bookings['end_datetime'] = df_bookings['end_datetime'].map(to_datetime)
 
-    df_bookings = df_bookings.rename(columns={
-        'user_id': '予約者名',
-        'room_id': '会議室名',
-        'booked_num': '予約人数',
-        'start_datetime': '開始時刻',
-        'end_datetime': '終了時刻',
-        'booking_id': '予約番号'
-    })
-
-
-    st.write("### 予約一　覧")
-    st.table(df_bookings)
+        df_bookings = df_bookings.rename(columns={
+            'user_id': '予約者名',
+            'room_id': '会議室名',
+            'booked_num': '予約人数',
+            'start_datetime': '開始時刻',
+            'end_datetime': '終了時刻',
+            'booking_id': '予約番号'
+        })
+        st.write("### 予約一覧")
+        st.table(df_bookings)
 
 
 
