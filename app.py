@@ -97,7 +97,7 @@ elif page=='bookings':
     # IDを各値に変換
     to_username = lambda x: users_id[x]
     to_room_name =  lambda x: rooms_id[x]['room_name']
-    to_datetime = lambda x: datetime.datetime.fromisoformat(x).strftime('%Y/%m/%d $H:$M')
+    to_datetime = lambda x: datetime.datetime.fromisoformat(x).strftime('%Y/%m/%d %H:%M')
 
 
     df_bookings = pd.DataFrame(bookings)
@@ -158,7 +158,13 @@ elif page=='bookings':
             ).isoformat(),
         }
         # 定員以下の予約人数の場合
-        if booked_num <= capacity:
+        if booked_num > capacity:
+            st.error(f'{room_name}の定員は、{capacity}名です。{capacity}名以下の予約人数を受け付けています。')
+        elif start_datetime > end_date_time:
+            st.error('開始時刻が終了時刻を超えています。')
+        elif start_datetime < datetime.time(hour=9, minute=0, second=0) or end_date_time > datetime.time(hour=20, minute=0, second=0):
+            st.error('利用時間は9:00~20:00になります。')
+        else:
             #会議室予約
             url = 'http://127.0.0.1:8000/bookings'
             res = requests.post(
@@ -167,7 +173,5 @@ elif page=='bookings':
             )
             if res.status_code == 200:
                 st.success("予約完了しました")
-            st.json(res.json())
-        
-        else:
-            st.error(f'{room_name}の定員は、{capacity}名です。{capacity}名以下の予約人数を受け付けています。')
+            elif res.status_code == 404 and res.json()['detail'] == 'Already booked':
+                st.error('指定の時間にはすでに予約が入っています。')
